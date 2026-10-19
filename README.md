@@ -3,7 +3,7 @@
 A plaintext log of my starred GitHub repositories. Git history records when each repo was starred or unstarred.
 
 - Data: [`zadewu.starred.csv`](zadewu.starred.csv) (newest star first)
-- Updated daily by [`.github/workflows/collect-stars.yaml`](.github/workflows/collect-stars.yaml), which runs [`scripts/fetch-stars.sh`](scripts/fetch-stars.sh)
+- Updated 3× a day (12:23, 18:23, 00:23 Asia/Saigon) by [`.github/workflows/collect-stars.yaml`](.github/workflows/collect-stars.yaml), which runs [`scripts/fetch-stars.sh`](scripts/fetch-stars.sh)
 - See when a repo was starred or unstarred: `git log -p -S '<owner>/<repo>' -- zadewu.starred.csv`
 
 Run locally (needs `gh` and `jq`): `bash scripts/fetch-stars.sh zadewu`
@@ -51,7 +51,7 @@ Settings → Actions → General → Workflow permissions → **Read and write p
 ```sh
 gh workflow run collect-stars.yaml && gh run watch
 ```
-The mirror step prints `missing=… starred=… skipped=…`. A backlog over 300 finishes over the next daily runs, or sooner if you re-run the workflow.
+The mirror step prints `missing=… starred=… skipped=…`. A backlog over 300 finishes over the next scheduled runs (300 per run), or sooner if you re-run the workflow.
 
 Preview locally without changing anything: `DRY_RUN=TRUE GH_TOKEN=<zadewu-token> bash scripts/sync-stars.sh <work-handle>`
 

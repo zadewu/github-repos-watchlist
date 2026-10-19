@@ -3,8 +3,14 @@ name: "Collect stars"
 on:
   workflow_dispatch:
   schedule:
-    # Daily at 00:00 UTC.
-    - cron: '0 0 * * *'
+    # 3x a day: 12:23, 18:23, 00:23 Asia/Saigon (05:23, 11:23, 17:23 UTC).
+    # Off the top of the hour, when GitHub delays/drops busy scheduled runs.
+    - cron: '23 5,11,17 * * *'
+
+# A manual run overlapping a scheduled one would race on git push.
+concurrency:
+  group: collect-stars
+  cancel-in-progress: false
 
 # Needed to push the updated CSV back to the repo.
 permissions:
@@ -13,6 +19,8 @@ permissions:
 jobs:
   collect_stars:
     runs-on: ubuntu-latest
+    # Normal runs take ~1 min; a full 300-star backfill ~7 min. Caps a hung run.
+    timeout-minutes: 15
     env:
       STARS_FILE: "${{ github.repository_owner }}.starred.csv"
     steps:

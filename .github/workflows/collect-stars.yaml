@@ -1,0 +1,50 @@
+name: "Collect stars"
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Daily at 00:00 UTC.
+    - cron: '0 0 * * *'
+
+# Needed to push the updated CSV back to the repo.
+permissions:
+  contents: write
+
+jobs:
+  collect_stars:
+    runs-on: ubuntu-latest
+    env:
+      STARS_FILE: "${{ github.repository_owner }}.starred.csv"
+    steps:
+      - uses: actions/checkout@v6
+
+      # Add-only mirror of SOURCE_GITHUB_HANDLE's stars onto the account owning
+      # ZADEWU_STAR_TOKEN. Runs first so this run's CSV includes them.
+      - name: Mirror source stars
+        if: ${{ vars.SOURCE_GITHUB_HANDLE != '' }}
+        env:
+          GH_TOKEN: "${{ secrets.ZADEWU_STAR_TOKEN }}"
+          SOURCE_GITHUB_HANDLE: "${{ vars.SOURCE_GITHUB_HANDLE }}"
+        run: |
+          bash scripts/sync-stars.sh "$SOURCE_GITHUB_HANDLE"
+
+      - name: Fetch stars
+        env:
+          GITHUB_TOKEN: "${{ github.token }}"
+        run: |
+          bash scripts/fetch-stars.sh '${{ github.repository_owner }}' >| "$STARS_FILE"
+
+      - name: Commit changes
+        run: |-
+          if [[ -z "$(git status --porcelain=v1 -- "$STARS_FILE")" ]]; then
+            echo "No changes."
+            exit 0
+          fi
+
+          readonly now="$(date -u "+%Y-%m-%dT%H:%M:%SZ")"
+          # See: https://github.com/actions/checkout/pull/1184
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- "$STARS_FILE"
+          git commit -m "Export starred repositories at $now"
+          git push

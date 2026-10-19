@@ -21,17 +21,21 @@ These are real stars on the `zadewu` account, made through the GitHub API with z
 | Name | Kind | Required for | Value |
 |---|---|---|---|
 | `GITHUB_TOKEN` | built-in | CSV export | Nothing to do. Actions provides it |
-| `ZADEWU_STAR_TOKEN` | **Secret** | Mirroring | Fine-grained PAT owned by `zadewu` (see below) |
+| `ZADEWU_STAR_TOKEN` | **Secret** | Mirroring | Classic PAT owned by `zadewu`, `public_repo` scope (see below) |
 | `SOURCE_GITHUB_HANDLE` | **Variable** | Mirroring | Work account GitHub handle. If unset, mirroring is skipped |
 
 ### 1. Create the zadewu token
-Logged in as **zadewu**: Settings → Developer settings → Personal access tokens → **Fine-grained tokens** → Generate new token.
-- Resource owner: `zadewu`
+Logged in as **zadewu**: Settings → Developer settings → Personal access tokens → **Tokens (classic)** → Generate new token (classic).
+- Scope: tick only **`public_repo`**
 - Expiration: up to 1 year. Set a reminder to rotate it
-- Repository access: **Public repositories**
-- Account permissions: **Starring → Read and write**. Leave everything else at *No access*
 
-Check it belongs to zadewu: `GH_TOKEN=<token> gh api /user --jq .login` should print `zadewu`.
+A fine-grained token does **not** work. Even with *Account → Starring: Read and write*, it can only write to repos zadewu owns, so starring anyone else's repo fails with `403 Resource not accessible by personal access token`.
+
+Check it before saving:
+```sh
+GH_TOKEN=<token> gh api /user --jq .login                                    # zadewu
+GH_TOKEN=<token> gh api -X PUT /user/starred/air-verse/air && echo write-ok # a repo you don't own
+```
 
 ### 2. Add the secret and the variable
 In this repo: Settings → Secrets and variables → **Actions**

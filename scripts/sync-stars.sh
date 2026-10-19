@@ -28,8 +28,10 @@ list_stars() {
 }
 
 # Returns 0 when starred, 1 when the repo was skipped (private, deleted,
-# blocked). Exits the script on 401 (bad token) and 429 (rate limited), since
-# every later call would fail too.
+# blocked). Exits the script on 401 (bad token), 429 (rate limited) and
+# "not accessible by personal access token" (token lacks permission, e.g. a
+# fine-grained token starring a repo zadewu doesn't own), since every later
+# call would fail too.
 star_repo() {
   local -r repo="$1" err_file="$2"
 
@@ -37,7 +39,7 @@ star_repo() {
     return 0
   fi
 
-  if grep -qE 'HTTP (401|429)' "$err_file"; then
+  if grep -qE 'HTTP (401|429)|not accessible by personal access token' "$err_file"; then
     cat "$err_file" >&2
     exit 1
   fi
